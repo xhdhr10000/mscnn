@@ -48,7 +48,7 @@ def evaluate():
     # 构建图模型
     images = tf.placeholder("float")
     labels = tf.placeholder("float")
-    predict_op = mscnn.inference(images)
+    predict_op = mscnn.inference_bn(images)
     loss_op = mscnn.loss(predict_op, labels)
 
     # 载入模型参数
@@ -91,8 +91,8 @@ def evaluate():
         loss_value = sess.run(loss_op, feed_dict={images: batch_xs, labels: batch_ys})
         end = time.clock()
 
-        print("time: %s\t loss_value: %s\t counting:%.7f\t predict:%.7f\t diff:%.7f" % \
-              ((end - start), loss_value, sum(sum(sum(batch_ys))), sum(sum(sum(predict[0]))),
+        print("Step: %d\%d\t time: %s\t loss_value: %s\t counting:%.7f\t predict:%.7f\t diff:%.7f" % \
+              (step, len(dir_names), (end - start), loss_value, sum(sum(sum(batch_ys))), sum(sum(sum(predict[0]))),
                sum(sum(sum(batch_ys)))-sum(sum(sum(predict[0])))))
 
         sum_ab = abs(sum(sum(sum(batch_ys))) - sum(sum(sum(predict[0]))))

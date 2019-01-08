@@ -35,7 +35,7 @@ FLAGS = tf.app.flags.FLAGS
 # 模型训练参数
 num_epochs_per_decay = 20
 learning_rate_per_decay = 0.9
-initial_learning_rate = 1.0e-1
+initial_learning_rate = 1.0e-4
 
 
 def train():
@@ -72,7 +72,10 @@ def train():
         checkpoint_dir = tf.train.get_checkpoint_state(FLAGS.model_dir)
         if checkpoint_dir and checkpoint_dir.model_checkpoint_path:
             saver.restore(sess, checkpoint_dir.model_checkpoint_path)
+            last_step = int(checkpoint_dir.model_checkpoint_path.replace("'", '').split('-')[1])
+            print("Continue from step %d" % last_step)
         else:
+            last_step = 0
             print('Not found checkpoint file')
 
         summary_op = tf.summary.merge_all()  # 概要汇总
@@ -83,7 +86,7 @@ def train():
         steps = 100000
         avg_loss_1 = 0
 
-        for step in xrange(steps):
+        for step in xrange(last_step+1, steps):
             if step < nums_train * 10:
                 # 开始10次迭代轮循按样本次序训练
                 num_batch = [divmod(step, nums_train)[1] + i for i in range(FLAGS.batch_size)]
@@ -111,7 +114,7 @@ def train():
                 ys.append(batch_ys)
 
             np_xs = np.array(xs)
-            np_ys = np.array(ys)
+            np_ys = np.array(ys)[:,:,:,0]
 
             # 获取损失值以及预测密度图
             _, loss_value = sess.run([train_op, loss], feed_dict={image: np_xs, label: np_ys})
@@ -126,18 +129,18 @@ def train():
                 avg_loss_1 = 0
 
             if step % 1 == 0:
-                print("avg_loss:%.7f\t counting:%.7f\t predict:%.7f" % \
-                      (loss_value, sum(sum(sum(np_ys))), sum(sum(sum(output)))))
+                print("Step:%d\t avg_loss:%.7f\t counting:%.7f\t predict:%.7f" % \
+                      (step, loss_value, sum(sum(sum(np_ys))), sum(sum(sum(output)))))
                 sess.run(add_avg_loss_op, feed_dict={avg_loss: loss_value})
 
             # 保存模型参数
-            if step % 2000 == 0:
+            if step % 1000 == 0:
                 checkpoint_path = os.path.join(FLAGS.model_dir, 'skip_mcnn.ckpt')
                 saver.save(sess, checkpoint_path, global_step=step)
 
             # 输出预测密度图(用于测试)
-            if step % 500 == 0:
-                out_path = os.path.join(FLAGS.output_dir, str(step) + "out.npy")
+            if step % 20 == 0:
+                out_path = os.path.join(FLAGS.output_dir, str(step) + im_name.split('.')[0] + "_out.npy")
                 np.save(out_path, output)
 
 
