@@ -1,8 +1,9 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
 ys = []
-with open('train.log') as f:
+with open(sys.argv[1]) as f:
     lines = f.read().splitlines()
     for line in lines:
         index = line.index('avg_loss') + 9

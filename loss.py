@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 ls = []
-with open('eval.log') as f:
+with open(sys.argv[1]) as f:
     lines = f.read().splitlines()
     for line in lines:
         if line == lines[-1]: break
